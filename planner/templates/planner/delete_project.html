@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Project | SolarWise</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f2;
+            margin: 0;
+            padding: 50px 16px;
+            color: #243329;
+        }
+
+        .card {
+            max-width: 450px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px #0001;
+            text-align: center;
+        }
+
+        h1 { color: #c0392b; }
+
+        button, a {
+            display: inline-block;
+            margin: 12px 5px 0;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button {
+            background: #c0392b;
+            color: white;
+        }
+
+        a {
+            background: #687367;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1>Delete Project?</h1>
+
+    <p>
+        Are you sure you want to delete
+        <strong>{{ project.name }}</strong>?
+    </p>
+
+    <p>This action cannot be undone.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Yes, Delete Project</button>
+        <a href="{% url 'home' %}">Cancel</a>
+    </form>
+
+</div>
+
+</body>
+</html>

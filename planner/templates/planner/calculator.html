@@ -1,0 +1,470 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Calculator | SolarWise</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7f2;
+            color: #243329;
+        }
+
+        nav {
+            background: white;
+            padding: 20px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px #00000008;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: bold;
+            color: #43852d;
+        }
+
+        nav a {
+            color: #354333;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            color: #43852d;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 45px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px #00000008;
+        }
+
+        .description, .note {
+            color: #657064;
+            line-height: 1.7;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin: 22px 0 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd5c6;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: 2px solid #43852d;
+            border-color: #43852d;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            background: #43852d;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #326b22;
+        }
+
+        .save-button {
+            background: #245c9c;
+        }
+
+        .save-button:hover {
+            background: #194578;
+        }
+
+        .results, .live-preview {
+            margin-top: 25px;
+            padding: 22px;
+            background: #edf6e8;
+            border-radius: 8px;
+        }
+
+        .live-preview {
+            display: none;
+            border: 1px solid #d4e5cc;
+        }
+
+        .result-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #d4e5cc;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .value {
+            font-weight: bold;
+            color: #326b22;
+            text-align: right;
+        }
+
+        .error {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            color: #a32222;
+            background: #fff0f0;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            color: #245c9c;
+            background: #edf4ff;
+            line-height: 1.6;
+        }
+
+        .note {
+            font-size: 13px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #687367;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 20px;
+            }
+
+            .result-item {
+                flex-direction: column;
+            }
+
+            .value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">☀ SolarWise</div>
+        <a href="/">Home</a>
+    </nav>
+
+    <main class="container">
+        <section class="card">
+
+            <h1>Solar System Calculator</h1>
+
+            <p class="description">
+                Enter your monthly electricity consumption and
+                solar panel wattage to estimate your solar system.
+            </p>
+
+            <form method="post" id="solarForm">
+                {% csrf_token %}
+
+                <label for="monthly_units">
+                    Monthly electricity usage (units / kWh)
+                </label>
+
+                <input
+                    type="number"
+                    id="monthly_units"
+                    name="monthly_units"
+                    min="1"
+                    max="100000"
+                    step="any"
+                    value="{{ monthly_units|default:'' }}"
+                    placeholder="Example: 300"
+                    required
+                >
+
+                <label for="panel_watt">
+                    Solar panel wattage (W)
+                </label>
+
+                <input
+                    type="number"
+                    id="panel_watt"
+                    name="panel_watt"
+                    min="1"
+                    max="2000"
+                    step="1"
+                    value="{{ panel_watt|default:615 }}"
+                    placeholder="Example: 615"
+                    required
+                >
+
+                {% if calculated %}
+                    <label for="project_name">
+                        Project name (for saving)
+                    </label>
+
+                    <input
+                        type="text"
+                        id="project_name"
+                        name="project_name"
+                        maxlength="100"
+                        placeholder="Example: My Home Solar System"
+                        value="{{ request.POST.project_name|default:'My Solar Project' }}"
+                    >
+                {% endif %}
+
+                <button type="submit" name="calculate" value="1">
+                    Calculate Solar Requirements
+                </button>
+
+                {% if calculated and user.is_authenticated %}
+                    <button
+                        type="submit"
+                        name="save_project"
+                        value="1"
+                        class="save-button"
+                    >
+                        Save Project to My Account
+                    </button>
+                {% endif %}
+            </form>
+
+            <!-- JavaScript Live Preview -->
+            {% if not calculated %}
+                <div class="live-preview" id="livePreview">
+
+                    <h2>Live Solar Estimate</h2>
+
+                    <div class="result-item">
+                        <span>Daily electricity usage</span>
+                        <span class="value" id="liveDaily">0 kWh</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Required solar capacity</span>
+                        <span class="value" id="liveRequired">0 kW</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Panel quantity</span>
+                        <span class="value" id="livePanels">0</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Total panel capacity</span>
+                        <span class="value" id="liveCapacity">0 kW</span>
+                    </div>
+
+                    <p class="note">
+                        These are preliminary estimates.
+                        Submit the form to calculate and save
+                        your project through Django.
+                    </p>
+                </div>
+            {% endif %}
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            {% if calculated %}
+
+                <div class="results">
+
+                    <h2>Your Estimated Results</h2>
+
+                    <div class="result-item">
+                        <span>Monthly electricity usage</span>
+                        <span class="value">{{ monthly_units }} units</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Estimated daily usage</span>
+                        <span class="value">{{ daily_usage }} kWh</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Estimated required capacity</span>
+                        <span class="value">{{ required_kw }} kW</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Panel wattage</span>
+                        <span class="value">{{ panel_watt }} W</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Number of solar panels</span>
+                        <span class="value">{{ panel_quantity }}</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Total panel capacity</span>
+                        <span class="value">{{ solar_capacity }} kW</span>
+                    </div>
+
+                </div>
+
+                {% if not user.is_authenticated %}
+                    <div class="info">
+                        To save this solar project to your account,
+                        please log in first.
+                        <a href="{% url 'login' %}">Login here</a>.
+                    </div>
+                {% endif %}
+
+                <p class="note">
+                    This estimate assumes 30 days per month,
+                    5 peak sun-hours per day and 80% system efficiency.
+                    Actual results depend on location, weather,
+                    shading, panel direction and equipment.
+                    Battery and inverter sizing are not included.
+                </p>
+
+            {% endif %}
+
+        </section>
+    </main>
+
+    <footer>
+        SolarWise — Smart Solar Energy Planning
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const monthlyInput = document.getElementById("monthly_units");
+            const panelInput = document.getElementById("panel_watt");
+            const preview = document.getElementById("livePreview");
+            const form = document.getElementById("solarForm");
+
+            // Live calculation elements
+            const dailyResult = document.getElementById("liveDaily");
+            const requiredResult = document.getElementById("liveRequired");
+            const panelsResult = document.getElementById("livePanels");
+            const capacityResult = document.getElementById("liveCapacity");
+
+            function calculateSolar() {
+
+                const monthlyUnits = parseFloat(monthlyInput.value);
+                const panelWatt = parseInt(panelInput.value, 10);
+
+                if (
+                    !Number.isFinite(monthlyUnits) ||
+                    !Number.isFinite(panelWatt) ||
+                    monthlyUnits < 1 ||
+                    monthlyUnits > 100000 ||
+                    panelWatt < 1 ||
+                    panelWatt > 2000
+                ) {
+                    if (preview) {
+                        preview.style.display = "none";
+                    }
+                    return;
+                }
+
+                // Same formula as the Django calculator
+                const dailyUsage = monthlyUnits / 30;
+
+                const requiredKW = dailyUsage / (5 * 0.80);
+
+                const panelQuantity = Math.ceil(
+                    (requiredKW * 1000) / panelWatt
+                );
+
+                const solarCapacity =
+                    (panelQuantity * panelWatt) / 1000;
+
+                // Display live results
+                if (preview) {
+
+                    dailyResult.textContent =
+                        dailyUsage.toFixed(2) + " kWh";
+
+                    requiredResult.textContent =
+                        requiredKW.toFixed(2) + " kW";
+
+                    panelsResult.textContent =
+                        panelQuantity + " panels";
+
+                    capacityResult.textContent =
+                        solarCapacity.toFixed(3) + " kW";
+
+                    preview.style.display = "block";
+                }
+            }
+
+            // Update results when user changes inputs
+            monthlyInput.addEventListener("input", calculateSolar);
+            panelInput.addEventListener("input", calculateSolar);
+
+            // Validate before submitting to Django
+            form.addEventListener("submit", function (event) {
+
+                const monthlyUnits = parseFloat(monthlyInput.value);
+                const panelWatt = Number(panelInput.value);
+
+                if (
+                    !Number.isFinite(monthlyUnits) ||
+                    monthlyUnits < 1 ||
+                    monthlyUnits > 100000
+                ) {
+                    event.preventDefault();
+                    alert("Please enter monthly units between 1 and 100000.");
+                    monthlyInput.focus();
+                    return;
+                }
+
+                if (
+                    !Number.isInteger(panelWatt) ||
+                    panelWatt < 1 ||
+                    panelWatt > 2000
+                ) {
+                    event.preventDefault();
+                    alert("Please enter valid panel wattage between 1 and 2000 W.");
+                    panelInput.focus();
+                }
+
+            });
+
+            // Show preview if existing values are available
+            calculateSolar();
+
+        });
+    </script>
+
+</body>
+</html>

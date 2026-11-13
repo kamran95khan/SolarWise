@@ -1,0 +1,485 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolarWise | Project Cost Calculator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px 15px;
+            font-family: Arial, sans-serif;
+            background: #f4f7f2;
+            color: #263326;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            color: #43852d;
+            margin-top: 0;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            margin-top: 17px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #43852d;
+            box-shadow: 0 0 4px rgba(67,133,45,0.3);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 14px;
+            border: none;
+            border-radius: 7px;
+            background: #43852d;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #326b20;
+        }
+
+        .result, .live-preview {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f0f7ec;
+            border-radius: 8px;
+        }
+
+        .result p, .live-preview p {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            border-bottom: 1px solid #dce8d5;
+            padding-bottom: 10px;
+        }
+
+        .total {
+            font-size: 22px;
+            font-weight: bold;
+            color: #43852d;
+        }
+
+        .live-total {
+            font-size: 21px;
+            font-weight: bold;
+            color: #43852d;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: #e8f5e9;
+            color: #256029;
+        }
+
+        .error-message {
+            display: none;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 6px;
+            background: #ffebee;
+            color: #b71c1c;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 20px;
+            color: #43852d;
+            text-decoration: none;
+        }
+
+        .note {
+            font-size: 13px;
+            color: #777;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .total, .live-total {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h1>☀ Solar Project Cost Calculator</h1>
+
+        <p>
+            Calculate the estimated cost of your solar system.
+            All prices should be entered in Pakistani Rupees (PKR).
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" id="costForm">
+            {% csrf_token %}
+
+            <label>Select Solar Project</label>
+
+            <select name="project_id" id="projectSelect" required>
+                <option value="">-- Select Your Project --</option>
+
+                {% for project in projects %}
+                    <option
+                        value="{{ project.id }}"
+                        data-panels="{{ project.panel_quantity }}"
+                        data-batteries="{{ project.battery_quantity }}"
+                        {% if selected_project.id == project.id %}selected{% endif %}
+                    >
+                        {{ project.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label>Solar Panel Price (per panel) - PKR</label>
+            <input
+                type="number"
+                id="panelPrice"
+                name="panel_price"
+                min="0"
+                step="0.01"
+                value="{{ request.POST.panel_price|default:'0' }}"
+                required
+            >
+
+            <label>Battery Price (per battery) - PKR</label>
+            <input
+                type="number"
+                id="batteryPrice"
+                name="battery_price"
+                min="0"
+                step="0.01"
+                value="{{ request.POST.battery_price|default:'0' }}"
+                required
+            >
+
+            <label>Inverter Total Price - PKR</label>
+            <input
+                type="number"
+                id="inverterPrice"
+                name="inverter_price"
+                min="0"
+                step="0.01"
+                value="{{ request.POST.inverter_price|default:'0' }}"
+                required
+            >
+
+            <label>Structure Cost - PKR</label>
+            <input
+                type="number"
+                id="structureCost"
+                name="structure_cost"
+                min="0"
+                step="0.01"
+                value="{{ request.POST.structure_cost|default:'0' }}"
+                required
+            >
+
+            <label>Wiring and Breakers Cost - PKR</label>
+            <input
+                type="number"
+                id="wiringCost"
+                name="wiring_cost"
+                min="0"
+                step="0.01"
+                value="{{ request.POST.wiring_cost|default:'0' }}"
+                required
+            >
+
+            <label>Labour Cost - PKR</label>
+            <input
+                type="number"
+                id="labourCost"
+                name="labour_cost"
+                min="0"
+                step="0.01"
+                value="{{ request.POST.labour_cost|default:'0' }}"
+                required
+            >
+
+            <div class="live-preview">
+                <h2>Live Cost Preview</h2>
+
+                <p>
+                    <span>Solar Panels</span>
+                    <strong id="livePanelTotal">Rs. 0.00</strong>
+                </p>
+
+                <p>
+                    <span>Batteries</span>
+                    <strong id="liveBatteryTotal">Rs. 0.00</strong>
+                </p>
+
+                <p>
+                    <span>Inverter</span>
+                    <strong id="liveInverterTotal">Rs. 0.00</strong>
+                </p>
+
+                <p>
+                    <span>Structure</span>
+                    <strong id="liveStructureTotal">Rs. 0.00</strong>
+                </p>
+
+                <p>
+                    <span>Wiring and Breakers</span>
+                    <strong id="liveWiringTotal">Rs. 0.00</strong>
+                </p>
+
+                <p>
+                    <span>Labour</span>
+                    <strong id="liveLabourTotal">Rs. 0.00</strong>
+                </p>
+
+                <p class="live-total">
+                    <span>Estimated Total</span>
+                    <strong id="liveGrandTotal">Rs. 0.00</strong>
+                </p>
+
+                <p class="note">
+                    This is a live preview. Submit the form to calculate
+                    and save the cost in your project.
+                </p>
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                Please enter valid non-negative prices.
+            </div>
+
+            <button type="submit">
+                Calculate and Save Cost
+            </button>
+        </form>
+
+        {% if calculated %}
+            <div class="result">
+                <h2>Cost Breakdown</h2>
+
+                <p>
+                    <span>Solar Panels ({{ selected_project.panel_quantity }})</span>
+                    <strong>Rs. {{ panel_total|floatformat:2 }}</strong>
+                </p>
+
+                <p>
+                    <span>Batteries ({{ selected_project.battery_quantity }})</span>
+                    <strong>Rs. {{ battery_total|floatformat:2 }}</strong>
+                </p>
+
+                <p>
+                    <span>Inverter</span>
+                    <strong>Rs. {{ inverter_price|floatformat:2 }}</strong>
+                </p>
+
+                <p>
+                    <span>Structure</span>
+                    <strong>Rs. {{ structure_cost|floatformat:2 }}</strong>
+                </p>
+
+                <p>
+                    <span>Wiring and Breakers</span>
+                    <strong>Rs. {{ wiring_cost|floatformat:2 }}</strong>
+                </p>
+
+                <p>
+                    <span>Labour</span>
+                    <strong>Rs. {{ labour_cost|floatformat:2 }}</strong>
+                </p>
+
+                <p class="total">
+                    <span>Total Estimated Cost</span>
+                    <strong>Rs. {{ total_cost|floatformat:2 }}</strong>
+                </p>
+
+                <p class="note">
+                    This total has been saved in your solar project.
+                </p>
+            </div>
+        {% endif %}
+
+        <a class="back" href="{% url 'home' %}">
+            ← Back to Home
+        </a>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const projectSelect = document.getElementById("projectSelect");
+
+    const panelPrice = document.getElementById("panelPrice");
+    const batteryPrice = document.getElementById("batteryPrice");
+    const inverterPrice = document.getElementById("inverterPrice");
+    const structureCost = document.getElementById("structureCost");
+    const wiringCost = document.getElementById("wiringCost");
+    const labourCost = document.getElementById("labourCost");
+
+    const errorMessage = document.getElementById("errorMessage");
+
+    const moneyFormat = new Intl.NumberFormat("en-PK", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    function getPrice(input) {
+        const value = Number(input.value);
+
+        if (input.value.trim() === "" || !Number.isFinite(value) || value < 0) {
+            return null;
+        }
+
+        return value;
+    }
+
+    function showMoney(elementId, amount) {
+        document.getElementById(elementId).textContent =
+            "Rs. " + moneyFormat.format(amount);
+    }
+
+    function updateLiveTotal() {
+
+        const selectedOption =
+            projectSelect.options[projectSelect.selectedIndex];
+
+        const panelQuantity =
+            Number(selectedOption.dataset.panels || 0);
+
+        const batteryQuantity =
+            Number(selectedOption.dataset.batteries || 0);
+
+        const panel = getPrice(panelPrice);
+        const battery = getPrice(batteryPrice);
+        const inverter = getPrice(inverterPrice);
+        const structure = getPrice(structureCost);
+        const wiring = getPrice(wiringCost);
+        const labour = getPrice(labourCost);
+
+        const prices = [
+            panel, battery, inverter,
+            structure, wiring, labour
+        ];
+
+        const valid = prices.every(price => price !== null);
+
+        if (!valid) {
+            errorMessage.style.display = "block";
+            return;
+        }
+
+        errorMessage.style.display = "none";
+
+        const panelTotal = panel * panelQuantity;
+        const batteryTotal = battery * batteryQuantity;
+
+        const grandTotal =
+            panelTotal +
+            batteryTotal +
+            inverter +
+            structure +
+            wiring +
+            labour;
+
+        showMoney("livePanelTotal", panelTotal);
+        showMoney("liveBatteryTotal", batteryTotal);
+        showMoney("liveInverterTotal", inverter);
+        showMoney("liveStructureTotal", structure);
+        showMoney("liveWiringTotal", wiring);
+        showMoney("liveLabourTotal", labour);
+        showMoney("liveGrandTotal", grandTotal);
+    }
+
+    const inputs = [
+        panelPrice,
+        batteryPrice,
+        inverterPrice,
+        structureCost,
+        wiringCost,
+        labourCost
+    ];
+
+    inputs.forEach(input => {
+        input.addEventListener("input", updateLiveTotal);
+    });
+
+    projectSelect.addEventListener("change", updateLiveTotal);
+
+    document.getElementById("costForm").addEventListener("submit", function(event) {
+
+        const selectedProject = projectSelect.value;
+
+        const prices = inputs.map(getPrice);
+
+        if (!selectedProject || prices.some(price => price === null)) {
+            event.preventDefault();
+            errorMessage.style.display = "block";
+            errorMessage.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    });
+
+    updateLiveTotal();
+
+});
+</script>
+
+</body>
+</html>

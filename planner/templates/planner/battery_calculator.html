@@ -1,0 +1,567 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Battery Calculator | SolarWise</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f2;
+            margin: 0;
+            color: #263326;
+        }
+
+        nav {
+            background: #2f6b35;
+            padding: 17px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 18px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        h1, h2 {
+            color: #2f6b35;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #43852d;
+            box-shadow: 0 0 4px rgba(67,133,45,0.25);
+        }
+
+        button {
+            background: #43852d;
+            color: white;
+            border: none;
+            padding: 13px 22px;
+            margin-top: 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #326b23;
+        }
+
+        .result, .live-preview {
+            background: #edf7e9;
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .result p, .live-preview p {
+            padding: 8px 0;
+            border-bottom: 1px solid #d5e6cf;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .highlight {
+            color: #2f6b35;
+            font-weight: bold;
+            font-size: 19px;
+        }
+
+        .message {
+            background: #e5f5df;
+            color: #286522;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .error {
+            background: #ffe8e8;
+            color: #a32626;
+        }
+
+        .validation-error {
+            display: none;
+            background: #ffe8e8;
+            color: #a32626;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .note {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            nav {
+                padding: 15px;
+            }
+
+            nav a {
+                display: inline-block;
+                margin: 5px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .highlight {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <div>
+        <a href="/">☀ SolarWise</a>
+    </div>
+
+    <div>
+        <a href="/">Home</a>
+        <a href="/calculator/">Solar Calculator</a>
+        <a href="/battery-calculator/">Battery Calculator</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>Battery & Inverter Calculator</h1>
+
+        <p>
+            Calculate your Lithium Battery requirements
+            and recommended inverter capacity.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.tags == 'error' %}error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" id="batteryForm">
+            {% csrf_token %}
+
+            <label>Select Solar Project</label>
+
+            <select name="project_id" id="projectSelect" required>
+                <option value="">-- Select Your Project --</option>
+
+                {% for project in projects %}
+                    <option value="{{ project.id }}"
+                        {% if selected_project.id == project.id %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                {% empty %}
+                    <option value="" disabled>No saved projects available</option>
+                {% endfor %}
+            </select>
+
+            <label>Battery Type</label>
+
+            <input type="text" value="Lithium Battery" readonly>
+
+            <label>Battery System Voltage</label>
+
+            <input type="text" value="48V" readonly>
+
+            <label>Load (kW)</label>
+
+            <input
+                type="number"
+                id="loadKw"
+                name="load_kw"
+                value="{{ load_kw|default:default_load }}"
+                min="0.1"
+                max="100"
+                step="0.1"
+                required
+            >
+
+            <label>Backup Time (Hours)</label>
+
+            <input
+                type="number"
+                id="backupHours"
+                name="backup_hours"
+                value="{{ backup_hours|default:default_backup }}"
+                min="1"
+                max="24"
+                step="0.5"
+                required
+            >
+
+            <label>One Battery Capacity (Ah)</label>
+
+            <input
+                type="number"
+                id="batteryAh"
+                name="battery_ah"
+                value="{{ battery_ah|default:default_battery_ah }}"
+                min="1"
+                max="1000"
+                step="1"
+                required
+            >
+
+            <div class="validation-error" id="validationError">
+                Please enter valid values within the allowed limits.
+            </div>
+
+            <button type="submit">
+                Calculate & Save Project
+            </button>
+
+        </form>
+
+    </div>
+
+    <!-- JavaScript Live Preview -->
+
+    <div class="card">
+
+        <h2>Live Battery Calculation</h2>
+
+        <p class="note">
+            Change your load, backup hours or battery capacity
+            to see the estimated results immediately.
+        </p>
+
+        <div class="live-preview" aria-live="polite">
+
+            <p>
+                <span>Required Energy:</span>
+                <strong id="liveEnergy">0.00 kWh</strong>
+            </p>
+
+            <p>
+                <span>Battery Voltage:</span>
+                <strong>48 V</strong>
+            </p>
+
+            <p>
+                <span>One Battery Capacity:</span>
+                <strong id="liveOneCapacity">0.00 kWh</strong>
+            </p>
+
+            <p>
+                <span>Usable Energy per Battery:</span>
+                <strong id="liveUsableEnergy">0.00 kWh</strong>
+            </p>
+
+            <p>
+                <span>Required Battery Quantity:</span>
+                <strong id="liveQuantity" class="highlight">0</strong>
+            </p>
+
+            <p>
+                <span>Total Battery Capacity:</span>
+                <strong id="liveTotalCapacity">0.00 kWh</strong>
+            </p>
+
+            <p>
+                <span>Recommended Inverter:</span>
+                <strong id="liveInverter" class="highlight">0 kW</strong>
+            </p>
+
+        </div>
+
+        <p class="note">
+            Assumptions: 80% usable battery capacity,
+            90% inverter efficiency and 48V battery system.
+            This is an estimated calculation.
+        </p>
+
+    </div>
+
+    {% if calculated %}
+
+    <div class="card">
+
+        <h2>Battery Calculation Results</h2>
+
+        <div class="result">
+
+            <p>
+                <strong>Selected Project:</strong>
+                {{ selected_project.name }}
+            </p>
+
+            <p>
+                <strong>Load:</strong>
+                {{ load_kw }} kW
+            </p>
+
+            <p>
+                <strong>Backup Time:</strong>
+                {{ backup_hours }} Hours
+            </p>
+
+            <p>
+                <strong>Required Energy:</strong>
+                {{ required_energy }} kWh
+            </p>
+
+            <p>
+                <strong>Battery Voltage:</strong>
+                {{ battery_voltage }} V
+            </p>
+
+            <p>
+                <strong>Capacity of One Battery:</strong>
+                {{ one_battery_capacity }} kWh
+            </p>
+
+            <p>
+                <strong>Required Battery Quantity:</strong>
+                {{ battery_quantity }}
+            </p>
+
+            <p>
+                <strong>Total Battery Capacity:</strong>
+                {{ total_battery_capacity }} kWh
+            </p>
+
+            <p>
+                <strong>Recommended Inverter:</strong>
+                {{ inverter_capacity }} kW
+            </p>
+
+        </div>
+
+        <p class="note">
+            <strong>Note:</strong>
+            Calculation assumes 80% usable battery capacity
+            and 90% inverter efficiency.
+            Actual backup depends on battery specifications
+            and connected load.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+<footer>
+    SolarWise — Smart Solar Energy Planning
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const loadInput = document.getElementById("loadKw");
+    const backupInput = document.getElementById("backupHours");
+    const batteryInput = document.getElementById("batteryAh");
+
+    const errorBox = document.getElementById("validationError");
+    const form = document.getElementById("batteryForm");
+
+    const inverterSizes = [
+        1, 1.5, 2, 3, 3.5, 5, 6, 8, 10,
+        12, 15, 20, 25, 30, 40, 50, 60, 80, 100
+    ];
+
+    function getValidNumber(input, minimum, maximum) {
+
+        if (input.value.trim() === "") {
+            return null;
+        }
+
+        const value = Number(input.value);
+
+        if (
+            !Number.isFinite(value) ||
+            value < minimum ||
+            value > maximum
+        ) {
+            return null;
+        }
+
+        return value;
+    }
+
+    function showValue(id, value, unit) {
+
+        document.getElementById(id).textContent =
+            Number(value).toFixed(2) + " " + unit;
+    }
+
+    function calculateBattery() {
+
+        const load = getValidNumber(loadInput, 0.1, 100);
+        const backup = getValidNumber(backupInput, 1, 24);
+        const batteryAh = getValidNumber(batteryInput, 1, 1000);
+
+        if (
+            load === null ||
+            backup === null ||
+            batteryAh === null
+        ) {
+            errorBox.style.display = "block";
+            return false;
+        }
+
+        errorBox.style.display = "none";
+
+        // Same formulas as Django views.py
+
+        const batteryVoltage = 48;
+
+        const usableDepth = 0.80;
+        const inverterEfficiency = 0.90;
+
+        const requiredEnergy = load * backup;
+
+        const oneBatteryCapacity =
+            batteryVoltage * batteryAh / 1000;
+
+        const usableEnergyPerBattery =
+            oneBatteryCapacity *
+            usableDepth *
+            inverterEfficiency;
+
+        const batteryQuantity = Math.ceil(
+            requiredEnergy / usableEnergyPerBattery
+        );
+
+        const totalBatteryCapacity =
+            batteryQuantity * oneBatteryCapacity;
+
+        // Same standard inverter selection as Django
+
+        const recommendedLoad = load * 1.25;
+
+        let inverterCapacity = inverterSizes.find(
+            size => size >= recommendedLoad
+        );
+
+        if (inverterCapacity === undefined) {
+            inverterCapacity = Math.ceil(recommendedLoad);
+        }
+
+        // Update live results
+
+        showValue("liveEnergy", requiredEnergy, "kWh");
+
+        showValue(
+            "liveOneCapacity",
+            oneBatteryCapacity,
+            "kWh"
+        );
+
+        showValue(
+            "liveUsableEnergy",
+            usableEnergyPerBattery,
+            "kWh"
+        );
+
+        document.getElementById("liveQuantity").textContent =
+            batteryQuantity;
+
+        showValue(
+            "liveTotalCapacity",
+            totalBatteryCapacity,
+            "kWh"
+        );
+
+        document.getElementById("liveInverter").textContent =
+            inverterCapacity + " kW";
+
+        return true;
+    }
+
+    // Update preview whenever an input changes
+
+    loadInput.addEventListener("input", calculateBattery);
+    backupInput.addEventListener("input", calculateBattery);
+    batteryInput.addEventListener("input", calculateBattery);
+
+    // Validate before submitting to Django
+
+    form.addEventListener("submit", function(event) {
+
+        if (!form.checkValidity() || !calculateBattery()) {
+
+            event.preventDefault();
+
+            errorBox.style.display = "block";
+
+            errorBox.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    });
+
+    // Initial preview
+
+    calculateBattery();
+
+});
+</script>
+
+</body>
+</html>

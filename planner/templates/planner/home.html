@@ -1,0 +1,688 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolarWise | My Solar Projects</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7f2;
+            color: #243329;
+        }
+
+        nav {
+            background: white;
+            padding: 20px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 2px 10px #00000008;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: bold;
+            color: #43852d;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #354333;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            color: #43852d;
+        }
+
+        .logout-btn {
+            background: #43852d;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #326b22;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: #43852d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 20px;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+        }
+
+        .hero {
+            padding: 65px 8%;
+            background: linear-gradient(120deg, #e4f2d9, #f8fbf5);
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 48px);
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #566354;
+            line-height: 1.7;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 12px;
+            margin-right: 6px;
+            padding: 12px 18px;
+            background: #43852d;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        .button:hover {
+            opacity: 0.85;
+        }
+
+        .cost-button {
+            background: #246b9e;
+        }
+
+        .pdf-button {
+            background: #7b4ba1;
+        }
+
+        .edit-btn {
+            background: #43852d;
+        }
+
+        .delete-btn {
+            background: #c0392b;
+        }
+
+        main {
+            padding: 40px 8%;
+        }
+
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 22px;
+        }
+
+        .project-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+            border-top: 4px solid #43852d;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.10);
+        }
+
+        .project-card h3 {
+            color: #43852d;
+            margin-top: 0;
+            font-size: 21px;
+        }
+
+        .project-card h4 {
+            color: #43852d;
+            margin-top: 22px;
+            margin-bottom: 12px;
+        }
+
+        .project-card p {
+            color: #566354;
+            border-bottom: 1px solid #edf0eb;
+            padding-bottom: 9px;
+            line-height: 1.5;
+        }
+
+        .project-card strong {
+            color: #243329;
+        }
+
+        .project-date {
+            font-size: 13px;
+            color: #849080 !important;
+        }
+
+        .actions {
+            display: flex;
+            gap: 9px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .edit-btn, .delete-btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
+            font-size: 14px;
+        }
+
+        .empty {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            border-radius: 6px;
+            background: #e4f2d9;
+            color: #285b1d;
+            transition: opacity 0.4s, transform 0.4s;
+        }
+
+        .message.hide {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #687367;
+        }
+
+        @media (max-width: 900px) {
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+                padding: 15px 0;
+                border-top: 1px solid #edf0eb;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-links a {
+                padding: 7px 0;
+            }
+
+            .nav-links form {
+                margin-top: 5px;
+            }
+        }
+
+        @media(max-width: 600px) {
+
+            nav {
+                padding: 18px 5%;
+            }
+
+            main {
+                padding: 30px 5%;
+            }
+
+            .hero {
+                padding: 45px 6%;
+            }
+
+            .project-card {
+                padding: 20px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *, *::before, *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+
+    <div class="logo">☀ SolarWise</div>
+
+    <button
+        type="button"
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+        aria-controls="navLinks"
+    >
+        ☰
+    </button>
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="{% url 'home' %}">Home</a>
+
+        <a href="{% url 'solar_calculator' %}">
+            Solar Calculator
+        </a>
+
+        <a href="{% url 'battery_calculator' %}">
+            Battery Calculator
+        </a>
+
+        <a href="{% url 'project_cost' %}">
+            Project Cost
+        </a>
+
+        <a href="{% url 'home' %}#projects">
+            My Projects
+        </a>
+
+        <a href="/admin/">Admin</a>
+
+        {% if user.is_authenticated %}
+
+            <span>Welcome, {{ user.username }}</span>
+
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+
+                <button class="logout-btn" type="submit">
+                    Logout
+                </button>
+            </form>
+
+        {% else %}
+
+            <a href="{% url 'login' %}">Login</a>
+
+            <a href="{% url 'signup' %}">Sign Up</a>
+
+        {% endif %}
+
+    </div>
+
+</nav>
+
+<section class="hero">
+
+    <h1>Plan Your Solar Energy Future</h1>
+
+    <p>
+        Calculate your solar panels, battery requirements,
+        inverter capacity and complete project cost with SolarWise.
+    </p>
+
+    <a class="button" href="{% url 'solar_calculator' %}">
+        Solar Calculator
+    </a>
+
+    <a class="button" href="{% url 'battery_calculator' %}">
+        Battery Calculator
+    </a>
+
+    <a class="button cost-button" href="{% url 'project_cost' %}">
+        Project Cost Calculator
+    </a>
+
+</section>
+
+<main id="projects">
+
+    <h2>My Solar Projects</h2>
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+    {% if user.is_authenticated %}
+
+        {% if projects %}
+
+            <div class="project-grid">
+
+                {% for project in projects %}
+
+                    <div class="project-card">
+
+                        <h3>☀ {{ project.name }}</h3>
+
+                        <h4>Solar System Details</h4>
+
+                        <p>
+                            <strong>Monthly Units:</strong>
+                            {{ project.monthly_units|floatformat:2 }} kWh
+                        </p>
+
+                        <p>
+                            <strong>Daily Usage:</strong>
+                            {{ project.daily_usage|floatformat:2 }} kWh
+                        </p>
+
+                        <p>
+                            <strong>Panel Wattage:</strong>
+                            {{ project.panel_watt }} W
+                        </p>
+
+                        <p>
+                            <strong>Panel Quantity:</strong>
+                            {{ project.panel_quantity }}
+                        </p>
+
+                        <p>
+                            <strong>Solar Capacity:</strong>
+                            {{ project.solar_capacity|floatformat:3 }} kW
+                        </p>
+
+                        <h4>Battery System Details</h4>
+
+                        {% if project.battery_quantity > 0 %}
+
+                            <p>
+                                <strong>Battery Type:</strong>
+                                {{ project.battery_type|title }}
+                            </p>
+
+                            <p>
+                                <strong>Battery Voltage:</strong>
+                                {{ project.battery_voltage }} V
+                            </p>
+
+                            <p>
+                                <strong>Battery Backup:</strong>
+                                {{ project.battery_backup_hours|floatformat:1 }} Hours
+                            </p>
+
+                            <p>
+                                <strong>Backup Load:</strong>
+                                {{ project.battery_load_kw|floatformat:2 }} kW
+                            </p>
+
+                            <p>
+                                <strong>Battery Unit:</strong>
+                                {{ project.battery_unit_capacity_ah|floatformat:0 }} Ah
+                            </p>
+
+                            <p>
+                                <strong>Battery Capacity:</strong>
+                                {{ project.battery_capacity|floatformat:2 }} kWh
+                            </p>
+
+                            <p>
+                                <strong>Battery Quantity:</strong>
+                                {{ project.battery_quantity }}
+                            </p>
+
+                            <p>
+                                <strong>Inverter Capacity:</strong>
+                                {{ project.inverter_capacity|floatformat:2 }} kW
+                            </p>
+
+                        {% else %}
+
+                            <p>
+                                Battery and inverter details have not
+                                been calculated yet.
+                            </p>
+
+                            <a class="button" href="{% url 'battery_calculator' %}">
+                                Calculate Battery
+                            </a>
+
+                        {% endif %}
+
+                        <h4>Project Cost</h4>
+
+                        <p>
+                            <strong>Estimated Cost:</strong>
+                            Rs. {{ project.estimated_cost|floatformat:0 }}
+                        </p>
+
+                        <a
+                            class="button cost-button"
+                            href="{% url 'project_cost' %}"
+                        >
+                            Calculate / Update Cost
+                        </a>
+
+                        <h4>Project Report</h4>
+
+                        <a
+                            class="button pdf-button"
+                            href="{% url 'download_project_pdf' project.id %}"
+                        >
+                            Download PDF Report
+                        </a>
+
+                        <p class="project-date">
+                            Created: {{ project.created_at|date:"d M Y" }}
+                        </p>
+
+                        <div class="actions">
+
+                            <a
+                                class="edit-btn"
+                                href="{% url 'edit_project' project.id %}"
+                            >
+                                Edit Project
+                            </a>
+
+                            <a
+                                class="delete-btn delete-project"
+                                href="{% url 'delete_project' project.id %}"
+                                data-project-name="{{ project.name }}"
+                            >
+                                Delete Project
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+
+                <p>No solar projects have been created yet.</p>
+
+                <a class="button" href="{% url 'solar_calculator' %}">
+                    Create Your First Project
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    {% else %}
+
+        <div class="empty">
+
+            <p>Please login to view your saved solar projects.</p>
+
+            <a href="{% url 'login' %}">Login</a>
+
+        </div>
+
+    {% endif %}
+
+</main>
+
+<footer>
+    SolarWise — Smart Solar Energy Planning
+</footer>
+
+<!-- JavaScript -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // 1. Mobile navigation menu
+
+    const menuToggle = document.getElementById("menuToggle");
+    const navLinks = document.getElementById("navLinks");
+
+    menuToggle.addEventListener("click", function () {
+
+        const isOpen = navLinks.classList.toggle("active");
+
+        menuToggle.setAttribute("aria-expanded", isOpen);
+
+        menuToggle.textContent = isOpen ? "✕" : "☰";
+
+    });
+
+
+    // Close mobile menu after clicking a navigation link
+
+    navLinks.querySelectorAll("a").forEach(function (link) {
+
+        link.addEventListener("click", function () {
+
+            navLinks.classList.remove("active");
+
+            menuToggle.setAttribute("aria-expanded", "false");
+
+            menuToggle.textContent = "☰";
+
+        });
+
+    });
+
+
+    // 2. Confirm before deleting a project
+
+    const deleteButtons = document.querySelectorAll(".delete-project");
+
+    deleteButtons.forEach(function (button) {
+
+        button.addEventListener("click", function (event) {
+
+            const projectName =
+                button.dataset.projectName || "this project";
+
+            const confirmed = confirm(
+                "Are you sure you want to delete " +
+                projectName +
+                "?"
+            );
+
+            if (!confirmed) {
+                event.preventDefault();
+            }
+
+        });
+
+    });
+
+
+    // 3. Automatically hide Django success messages
+
+    const messages = document.querySelectorAll(".message");
+
+    messages.forEach(function (message) {
+
+        setTimeout(function () {
+
+            message.classList.add("hide");
+
+            setTimeout(function () {
+                message.style.display = "none";
+            }, 450);
+
+        }, 5000);
+
+    });
+
+
+    // 4. Smooth scrolling for links to page sections
+
+    document.querySelectorAll('a[href*="#"]').forEach(function (link) {
+
+        link.addEventListener("click", function (event) {
+
+            const url = new URL(link.href, window.location.href);
+
+            if (
+                url.pathname === window.location.pathname &&
+                url.hash
+            ) {
+
+                const target = document.querySelector(url.hash);
+
+                if (target) {
+
+                    event.preventDefault();
+
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+
+                    history.pushState(null, "", url.hash);
+
+                }
+
+            }
+
+        });
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

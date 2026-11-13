@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sign Up | SolarWise</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f2;
+            margin: 0;
+            padding: 40px 16px;
+            color: #333;
+        }
+
+        .card {
+            max-width: 460px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            color: #43852d;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #43852d;
+            text-align: center;
+            font-size: 27px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        form p {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: 2px solid #43852d;
+            border-color: #43852d;
+        }
+
+        .helptext {
+            display: block;
+            color: #666;
+            font-size: 12px;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .helptext ul {
+            padding-left: 20px;
+        }
+
+        .errorlist {
+            color: #b00020;
+            font-size: 14px;
+            padding-left: 20px;
+        }
+
+        button {
+            width: 100%;
+            background: #43852d;
+            color: white;
+            padding: 13px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #326b22;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 22px;
+            line-height: 2;
+        }
+
+        a {
+            color: #43852d;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: #e8f5e2;
+            color: #285b1c;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .card {
+                padding: 22px;
+                margin: 10px auto;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+
+        <div class="logo">☀ SolarWise</div>
+
+        <h1>Create Your Account</h1>
+
+        <p class="subtitle">
+            Join SolarWise to plan your solar energy system
+            and save your solar projects.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'signup' %}">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit">Create Account</button>
+        </form>
+
+        <div class="links">
+            Already have an account?
+            <a href="{% url 'login' %}">Log In</a>
+
+            <br>
+
+            <a href="{% url 'home' %}">Back to Home</a>
+        </div>
+
+    </div>
+
+</body>
+</html>
